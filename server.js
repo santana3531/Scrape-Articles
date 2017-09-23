@@ -1,45 +1,62 @@
 /* MONGODB URI //// mongodb://heroku_rvsr1p7z:n0td00qb465vqu04b1kj4nejl2@ds147884.mlab.com:47884/heroku_rvsr1p7z*/
 
 
-// Depencies
+// REQUIRE the dependencies
 var express = require('express');
-var cheerio = require('cheerio');
-var mongojs = require('mongojs');
 var bodyParser = require('body-parser');
-var request = require('request');
+var expressHandlebars = require("express-handlebars");
 var mongoose = require('mongoose');
 
-// require the articles.js and review.js
-var Article = require('./models/Article.js');
-var Reviw = require('./models/Review.js');
 
-// use mongoose promises
-mongoose.Promise = Promise;
+// require the articles.js and review.js
+var PORT = process.env.PORT || 3000;
+
 
 //start express
 var app = express();
 
-// use express to ake public dir and body parser in the app
-app.use(express.static('public'));
-app.use(bodyParser.urlencoded({extebded: false}));
 
-// set up database with URI key from the top.
-mongoose.connect("mongodb://heroku_rvsr1p7z:n0td00qb465vqu04b1kj4nejl2@ds147884.mlab.com:47884/heroku_rvsr1p7z");
+// use the express router
+var router = express.Router();
 
-var promise = mongoose.connect("mongodb://localhost/scraped", {
-	useMongoClient: true,
-});
+// REQUIRE route file 
+require('./config/routes')(router);
+
+// USE express to take public directory
+app.use(express.static(__dirname + '/public'));
 
 
-promise.then(function(db) {
-	var db = mongoose.connection;
-	db.on("err", function(err) {
-		console.log("Database error", err);
-	});
+// Connect handlebars with the express app
+app.engine('handlebars', expressHandlebars({
+	defaultLayout: "main"
+}));
+app.set("show engine", "handlebars");
+
+// USE bodyParser 
+app.use(bodyParser.urlencoded({
+	extended: false
+}));
+
+// USE router for all the requests
+app.use(router);
+
+
+// use the mongoDB db if deploying. if not use localhost
+var db = process.env.MONGODB_URI || "mongodb://localhost/scraped"
+
+mongoose.connect(db, function(err) {
+		if (err) { // console log it
+		console.log(err);
+	};
 	// if successful login, log success message
-	db.once("open", function() {
+	else {
 		console.log("Mongoose on the loose, you're connected!");
-	});
+	};
 });
 
+
+// listen on Port 3000
+app.listen(PORT, function() {
+	console.log("Listening on port: " + PORT);
+});
 
