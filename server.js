@@ -42,7 +42,7 @@ app.use(router);
 
 
 // use the mongoDB db if deploying. if not use localhost
-var db = process.env.MONGODB_URI || "mongodb://localhost/scraped"
+var db = process.env.MONGODB_URI || "mongodb://heroku_rvsr1p7z:n0td00qb465vqu04b1kj4nejl2@ds147884.mlab.com:47884/heroku_rvsr1p7z"
 
 mongoose.connect(db, function(err) {
 		if (err) { // console log it
