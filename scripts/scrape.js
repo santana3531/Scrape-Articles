@@ -1,58 +1,60 @@
-//// Require request and cheerio, making our scrapes possible
+// javascript to scrape
+
+// require request and cheerio
 var request = require("request");
 var cheerio = require("cheerio");
 
-// This function will scrape the NYTimes website (cb is our callback)
+
+// write the function that will scrape from NYTimes (cb for callback)
 var scrape = function(cb) {
-  // Use the request package to take in the body of the page's html
-  request("http://www.nytimes.com", function(err, res, body) {
-    // body is the actual HTML on the page. Load this into cheerio
 
-    // Saving this to $ creates a virtual HTML page we can minipulate and
-    // traverse with the same methods we'd use in jQuery
-    var $ = cheerio.load(body);
+    // request will take what's on the page of the html
+    request("http://www.nytimes.com", function(err, res, body) {
 
-    // Make an empty array to save our article info
-    var articles = [];
+      // 
+      var $ = cheerio.load(body);
 
-    // Now, find and loop through each element that has the "theme-summary" class
-    // (i.e, the section holding the articles)
-    $(".theme-summary").each(function(i, element) {
-      // In each .theme-summary, we grab the child with the class story-heading
+      // array to save scraped articles data
+      var articles = [];
 
-      // Then we grab the inner text of the this element and store it
-      // to the head variable. This is the article headline
-      var head = $(this).children(".story-heading").text().trim();
+      // find and loop through the articles with "theme-summary" class from NYTimes
+      // the section with the articles
+      $(".theme-summary").each(function(i, element) {
 
-      // Grab the URL of the article
-      var url = $(this).children(".story-heading").children("a").attr("href");
+        // using the theme-summary we grab the article headline by finding the 
+        // child with classname "story-heading" 
+        var head = $(this).children(".story-heading").text().trim();
 
-      // Then we grab any children with the class of summary and then grab it's inner text
-      // We store this to the sum variable. This is the article summary
-      var sum = $(this).children(".summary").text().trim();
+        // grab the URL of the articles
+        var url = $(this).children(".story-heading").children("a").attr("href");
 
-      // So long as our headline and sum and url aren't empty or undefined, do the following
-      if (head && sum && url) {
-        // This section uses regular expressions and the trim function to tidy our headlines and summaries
-        // We're removing extra lines, extra spacing, extra tabs, etc.. to increase to typographical cleanliness.
-        var headNeat = head.replace(/(\r\n|\n|\r|\t|\s+)/gm, " ").trim();
-        var sumNeat = sum.replace(/(\r\n|\n|\r|\t|\s+)/gm, " ").trim();
+        // grab any children with the classname "summary" and it's inner text to show a summary of the article
+        var sum = $(this).children(".summary").text().trim();
 
-        // Initialize an object we will push to the articles array
 
-        var dataToAdd = {
-          headline: headNeat,
-          summary: sumNeat,
-          url: url
-        };
+        // clean up the extras from the requested data
+        if (head && url && sum) {
 
-        articles.push(dataToAdd);
-      }
+          var headNeat = head.replace(/(\r\n|\n|\r|\t|\s+)/gm, " ").trim();
+          var sumNeat = sum.replace(/(\r\n|\n|\r|\t|\s+)/gm, " ").trim();
+
+          // push the requested data to the articles array
+          var dataToAdd = {
+            headline: headNeat,
+            summary: sumNeat,
+            url: url
+          };
+
+
+          articles.push(dataToAdd);
+
+        }
+      });
+      // callback the array of articles
+      cb(articles)
     });
-    // After our loop is complete, send back the array of articles to the callback function
-    cb(articles);
-  });
 };
 
-// Export the function, so other files in our backend can use it
+
+// export
 module.exports = scrape;
