@@ -126,18 +126,84 @@ function renderNotesList(data) {
 function handleArticleDelete() {
   // this function will delete headlines/articles
   // we grab the id to get notes from the panel
-  var currentArticle = $(this).parents(".panel").data();
-    // grab all notes with headline/article id
+  var articleToDelete = $(this).parents(".panel").data();
 
-  $.get("/api/notes/" + currentArticle._id)then(function(data) {
-    // create the notes modal html
-    var modalText = [
-      
-    ]
-  })
+  // delete method for articles/headline
+  $.ajax({
+    method: "DELETE",
+    url: "/api/headlines/" + articleToDelete._id
+  }).then(function(data) {
+    // run initPAge again to re-render the list of saved articles
+    if (data.ok) {
+      initPage();
+    }
+  });
 }
 
+function handleArticleNotes() {
+  // opening and displaying the notes modal
+  // get the id of the article to get notes from the panel
+  var currentArticle = $(this).parents(".panel").data();
+  // grab the notes with "this" article/headline id
+  $.get("/api/notes" + currentArticle._id).then(function(data) {
+    // create the HTML to add to the notes modal
+    var modalText = [
+    "<div class='container-fluid text-center'>",
+    "<h4>Article Notes: ",
+    currentArticle._id,
+    "</h4>",
+    "<hr />",
+    "<ul class='list-group note-container'>",
+    "</ul>",
+    "<textarea placeholder='New Note' rows='4' cols='60'></textarea>",
+    "<button class='btn btn-success save'>Save Note</button>",
+    "</div>"
+    ].join("");
+    // Formatted HTML for notes Modal
+    bootbox.dialog({
+      message: modalText,
+      closeButton: true
+    });
+    var noteData = {
+      _id: currentArticle._id,
+      notes: data || []
+    };
+    // add info from article and article notes to save and view later
+    $(".btn.save").data("article", noteData);
+    // renderNotesList will fill out the HTML in the modal
+    renderNotesList(noteData);
+  });
+}
+
+  function handleNoteSave() {
+    // function when user saves a note for an article
+    // variable holds formmatted data about the note
+    // grab the info typed into the box
+    var noteData;
+    var newNote = $(".bootbox-body textarea").val().trim();
+    // post the info written about the note
+    if (newNote) {
+      noteData = {
+        _id: $(this).data("article")._id,
+        noteText: newNote
+      };
+      $.post("/api/notes", noteData).then(function() {
+        //close modal
+        bootbox.hideAll();
+      });
+    }
+  }
+
+  // function to delete notes by grabbing the "id" of the note
+  function handleNoteDelete() {
+    var noteToDelete = $(this).data("_id");
+    $.ajax({
+      url: "api/notes/" + noteToDelete,
+      method: "DELETE"
+    }).then(function() {
+      bootbox.hideAll();
+    });
+  }
 
 
-
-})
+});
